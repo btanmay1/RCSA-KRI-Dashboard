@@ -430,6 +430,30 @@ def build_previews(con: sqlite3.Connection, out: Path) -> None:
     plt.close(fig)
 
 
+# ----------------------------------------------------------------------------- interactive web dashboard
+def build_web(con: sqlite3.Connection, out: Path) -> Path:
+    """Self-contained HTML dashboard (GitHub Pages) built from the same SQL views as Excel and Power BI."""
+    import json
+    rec = lambda df: json.loads(df.to_json(orient="records"))
+    data = {
+        "meta": {"process": K.PROCESS, "as_of": K.AS_OF_DATE, "appetite": K.RISK_APPETITE_RESIDUAL},
+        "months": K.MONTHS,
+        "risks": rec(pd.read_sql("SELECT * FROM v_risk_scores ORDER BY risk_id", con)),
+        "controls": rec(pd.read_sql("SELECT * FROM v_control_scores ORDER BY control_id", con)),
+        "risk_control": rec(pd.read_sql("SELECT * FROM risk_control", con)),
+        "kris": rec(pd.read_sql("SELECT * FROM kri ORDER BY kri_id", con)),
+        "kri_values": rec(pd.read_sql("SELECT kri_id, month, value, rag FROM v_kri_rag", con)),
+        "issues": rec(pd.read_sql("SELECT * FROM v_issue_ageing ORDER BY issue_id", con)),
+    }
+    html = (ROOT / "rcsa" / "web_template.html").read_text(encoding="utf-8")
+    assert "/*DATA*/null" in html
+    html = html.replace("/*DATA*/null", json.dumps(data, separators=(",", ":")).replace("</", "<\\/"))
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / "index.html"
+    path.write_text(html, encoding="utf-8")
+    return path
+
+
 # ----------------------------------------------------------------------------- main
 def main() -> None:
     for d in (DATA, DATA / "powerbi", EXCEL, DOCS):
@@ -453,6 +477,7 @@ def main() -> None:
 
     build_excel(f, EXCEL / "RCSA_KRI_Workbook.xlsx")
     build_previews(con, DOCS)
+    build_web(con, DOCS)
 
     r = views["v_risk_scores"]
     print(f"Risks: {len(r)} | Controls: {len(f['control'])} | Links: {len(f['risk_control'])} | KRIs: {len(f['kri'])} x {len(K.MONTHS)} months | Issues: {len(f['issue'])}")

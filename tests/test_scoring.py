@@ -61,3 +61,17 @@ def test_issue_ageing(tmp_path):
     assert set(i[i.status == "Closed"].ageing_bucket) <= {"Closed"}
     overdue = i[i.due_status == "Overdue"]
     assert (overdue.due_date < K.AS_OF_DATE).all() and (overdue.status == "Open").all()
+
+
+def test_web_dashboard_embeds_sql_results(tmp_path):
+    import json
+    f = frames()
+    con = B.build_db(f, tmp_path / "t.db")
+    html = B.build_web(con, tmp_path / "docs").read_text(encoding="utf-8")
+    assert "/*DATA*/" not in html
+    blob = html.split("const D = ", 1)[1].split(";\n", 1)[0]
+    data = json.loads(blob.replace("<\/", "</"))
+    assert len(data["risks"]) == 18 and len(data["controls"]) == 25
+    assert len(data["kri_values"]) == len(K.KRIS) * len(K.MONTHS)
+    sql = pd.read_sql("SELECT risk_id, residual_score FROM v_risk_scores", con).set_index("risk_id").residual_score.to_dict()
+    assert {r["risk_id"]: r["residual_score"] for r in data["risks"]} == sql

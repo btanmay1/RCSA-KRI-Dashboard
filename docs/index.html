@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RCSA KRI Dashboard</title>
+<meta name="description" content="Risk and control self-assessment and KRI monitoring for card onboarding (KYC). Synthetic, illustrative data.">
+<style>
+:root {
+  --surface: #fcfcfb; --surface-2: #f3f2ee; --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #7a7974; --grid: #e4e3df;
+  --accent: #2a78d6; --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --critical: #d03b3b; --missing: #c9c8c2;
+  --on-status: #0b0b0b; --shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface: #1a1a19; --surface-2: #242423; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #94938b; --grid: #3a3a37;
+    --accent: #3987e5; --missing: #55544f; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --surface: #1a1a19; --surface-2: #242423; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #94938b; --grid: #3a3a37;
+  --accent: #3987e5; --missing: #55544f; --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+h1 { font-size: 22px; margin: 0; }
+h2 { font-size: 15px; margin: 0 0 10px; }
+.sub { color: var(--ink-2); font-size: 13px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 16px 0; padding: 10px 12px; background: var(--surface-2); border-radius: 8px; }
+.filters label { font-size: 12px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; }
+select, button { font: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--grid); border-radius: 6px; padding: 4px 8px; }
+button { cursor: pointer; }
+button:hover { border-color: var(--ink-3); }
+.chip { display: none; font-size: 12px; background: var(--surface); border: 1px solid var(--accent); color: var(--ink); border-radius: 999px; padding: 2px 10px; }
+.chip.on { display: inline-flex; gap: 6px; align-items: center; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 10px; margin-bottom: 16px; }
+.tile { background: var(--surface-2); border-radius: 8px; padding: 12px 14px; }
+.tile .lab { font-size: 12px; color: var(--ink-2); }
+.tile .val { font-size: 26px; font-weight: 650; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile .note { font-size: 12px; color: var(--ink-3); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 14px; box-shadow: var(--shadow); min-width: 0; }
+.section { margin-top: 16px; }
+.heat { display: grid; grid-template-columns: 22px repeat(5, minmax(0, 1fr)); gap: 3px; width: 100%; max-width: 360px; }
+.heat .ax { font-size: 11px; color: var(--ink-2); display: flex; align-items: center; justify-content: center; }
+.hc { aspect-ratio: 1.25; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: var(--on-status); cursor: default; border: 2px solid transparent; }
+.hc.has { cursor: pointer; }
+.hc.empty { opacity: .28; }
+.hc.sel { border-color: var(--ink); }
+.axis-note { font-size: 11px; color: var(--ink-2); margin-top: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); margin-top: 10px; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-size: 12px; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+th.sortable { cursor: pointer; }
+th.sortable:hover { color: var(--ink); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 600; color: var(--on-status); white-space: nowrap; }
+.rag { border-collapse: separate; border-spacing: 3px; font-size: 12px; width: auto; }
+.rag th, .rag td { border: 0; padding: 0; }
+.rag td.k { padding-right: 8px; color: var(--ink); white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.rag td.k:hover, .rag tr.sel td.k { text-decoration: underline; }
+.rag td.c { min-width: 30px; width: 34px; height: 24px; border-radius: 4px; text-align: center; font-weight: 700; color: var(--on-status); }
+.rag th { color: var(--ink-2); font-weight: 500; font-size: 11px; text-align: center; padding-bottom: 2px; }
+svg text { fill: var(--ink-2); font-size: 11px; }
+.tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--grid); border-radius: 6px; padding: 7px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.18); max-width: 280px; z-index: 10; display: none; }
+.tip b { font-weight: 650; }
+.alerts li { margin-bottom: 4px; }
+.muted { color: var(--ink-2); }
+footer { margin-top: 28px; font-size: 12px; color: var(--ink-3); }
+a { color: var(--accent); }
+@media (max-width: 520px) { .tile .val { font-size: 22px; } h1 { font-size: 19px; } .rag td.k { max-width: 150px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>RCSA / PRSA and KRI dashboard</h1>
+      <div class="sub" id="subtitle"></div>
+    </div>
+    <button id="theme" type="button" aria-label="Toggle dark mode">Theme</button>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <label>Risk category <select id="fCat"></select></label>
+    <label>Sub-process <select id="fSub"></select></label>
+    <label>Risk owner <select id="fOwn"></select></label>
+    <span class="chip" id="cellChip"><span id="cellChipText"></span><button type="button" id="clearCell" aria-label="Clear heat map selection">×</button></span>
+    <button type="button" id="reset">Reset</button>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="grid2">
+    <div class="card"><h2>Inherent risk heat map</h2><div class="heat" id="heatInh"></div><div class="axis-note">Rows: impact (5 at top) · Columns: likelihood 1→5 · Click a cell to filter the register</div></div>
+    <div class="card"><h2>Residual risk heat map</h2><div class="heat" id="heatRes"></div><div class="axis-note">Residual likelihood after controls · number = count of risks</div>
+      <div class="legend" id="bandLegend"></div></div>
+  </div>
+
+  <div class="card section">
+    <h2>KRI status by month <span class="muted" style="font-weight:400">– click a KRI to chart it</span></h2>
+    <div class="scroll"><table class="rag" id="ragMatrix"></table></div>
+    <div class="legend"><span><span class="sw" style="background:var(--good)"></span>G Green</span><span><span class="sw" style="background:var(--warn)"></span>A Amber</span><span><span class="sw" style="background:var(--critical)"></span>R Red (breach)</span></div>
+  </div>
+
+  <div class="grid2 section">
+    <div class="card"><h2 id="kriTitle">KRI trend</h2><div id="kriChart"></div><div class="axis-note" id="kriNote"></div></div>
+    <div class="card"><h2>Breach alerts – latest month</h2><ul class="alerts" id="alerts"></ul></div>
+  </div>
+
+  <div class="grid2 section">
+    <div class="card"><h2>Open issues by age</h2><div id="ageChart"></div></div>
+    <div class="card"><h2>Overdue issues</h2><div class="scroll"><table id="overdue"></table></div></div>
+  </div>
+
+  <div class="card section"><h2>Risk register <span class="muted" id="regCount" style="font-weight:400"></span></h2><div class="scroll"><table id="register"></table></div></div>
+  <div class="card section"><h2>Control library</h2><div class="scroll"><table id="controls"></table></div></div>
+
+  <footer>Synthetic, illustrative data – no real bank data. Scoring: inherent = impact × likelihood; control score = min(design, operating) on 1–3;
+    likelihood reduced by (avg control score − 1)/2 × 70%; residual = impact × residual likelihood; appetite = residual ≤ <span id="appetite"></span>.
+    Generated by <code>python -m rcsa.build</code> from the same SQL views as the Excel workbook. Source: <a href="https://github.com/btanmay1/RCSA-KRI-Dashboard">github.com/btanmay1/RCSA-KRI-Dashboard</a>.</footer>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const D = {"meta":{"process":"Card Onboarding (KYC)","as_of":"2026-10-31","appetite":8},"months":["2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10"],"risks":[{"risk_id":"R01","title":"Customer identity not verified","category":"Fraud","sub_process":"Identity & document verification","owner":"Head of Onboarding Ops","impact":5,"likelihood":4,"inherent_score":20,"inherent_rating":"Critical","mapped_controls":3,"control_ids":"C03, C04, C25","avg_control_score":2.67,"control_effectiveness":"Partially Effective","likelihood_reduction":0.583,"residual_likelihood":2,"residual_score":10,"residual_rating":"Medium","appetite_status":"Outside appetite"},{"risk_id":"R02","title":"Incomplete KYC documentation","category":"Regulatory compliance","sub_process":"Identity & document verification","owner":"Head of Onboarding Ops","impact":4,"likelihood":4,"inherent_score":16,"inherent_rating":"High","mapped_controls":2,"control_ids":"C01, C13","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":3,"residual_score":12,"residual_rating":"High","appetite_status":"Outside appetite"},{"risk_id":"R03","title":"Forged or tampered documents accepted","category":"Fraud","sub_process":"Identity & document verification","owner":"Fraud Risk Manager","impact":5,"likelihood":3,"inherent_score":15,"inherent_rating":"High","mapped_controls":2,"control_ids":"C01, C02","avg_control_score":2.5,"control_effectiveness":"Partially Effective","likelihood_reduction":0.525,"residual_likelihood":1,"residual_score":5,"residual_rating":"Low","appetite_status":"Within appetite"},{"risk_id":"R04","title":"PEP not identified at onboarding","category":"Financial crime (AML)","sub_process":"Screening","owner":"MLRO","impact":4,"likelihood":3,"inherent_score":12,"inherent_rating":"High","mapped_controls":1,"control_ids":"C06","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":2,"residual_score":8,"residual_rating":"Medium","appetite_status":"Within appetite"},{"risk_id":"R05","title":"Sanctions screening miss","category":"Financial crime (Sanctions)","sub_process":"Screening","owner":"MLRO","impact":5,"likelihood":2,"inherent_score":10,"inherent_rating":"Medium","mapped_controls":2,"control_ids":"C05, C24","avg_control_score":2.5,"control_effectiveness":"Partially Effective","likelihood_reduction":0.525,"residual_likelihood":1,"residual_score":5,"residual_rating":"Low","appetite_status":"Within appetite"},{"risk_id":"R06","title":"Adverse media not screened","category":"Financial crime (AML)","sub_process":"Screening","owner":"MLRO","impact":3,"likelihood":3,"inherent_score":9,"inherent_rating":"Medium","mapped_controls":1,"control_ids":"C07","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":2,"residual_score":6,"residual_rating":"Medium","appetite_status":"Within appetite"},{"risk_id":"R07","title":"Incorrect customer risk rating","category":"Financial crime (AML)","sub_process":"Customer due diligence","owner":"KYC Policy Lead","impact":4,"likelihood":3,"inherent_score":12,"inherent_rating":"High","mapped_controls":2,"control_ids":"C08, C13","avg_control_score":2.5,"control_effectiveness":"Partially Effective","likelihood_reduction":0.525,"residual_likelihood":1,"residual_score":4,"residual_rating":"Low","appetite_status":"Within appetite"},{"risk_id":"R08","title":"EDD not performed for high-risk customers","category":"Financial crime (AML)","sub_process":"Customer due diligence","owner":"KYC Policy Lead","impact":5,"likelihood":3,"inherent_score":15,"inherent_rating":"High","mapped_controls":1,"control_ids":"C09","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":2,"residual_score":10,"residual_rating":"Medium","appetite_status":"Outside appetite"},{"risk_id":"R09","title":"Address not verified","category":"Fraud","sub_process":"Identity & document verification","owner":"Head of Onboarding Ops","impact":3,"likelihood":3,"inherent_score":9,"inherent_rating":"Medium","mapped_controls":1,"control_ids":"C10","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":2,"residual_score":6,"residual_rating":"Medium","appetite_status":"Within appetite"},{"risk_id":"R10","title":"Duplicate customer profiles created","category":"Data management","sub_process":"Account set-up & data","owner":"Data Governance Lead","impact":3,"likelihood":4,"inherent_score":12,"inherent_rating":"High","mapped_controls":1,"control_ids":"C11","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":3,"residual_score":9,"residual_rating":"Medium","appetite_status":"Outside appetite"},{"risk_id":"R11","title":"Customer data captured incorrectly","category":"Data management","sub_process":"Account set-up & data","owner":"Data Governance Lead","impact":3,"likelihood":4,"inherent_score":12,"inherent_rating":"High","mapped_controls":2,"control_ids":"C12, C13","avg_control_score":2.5,"control_effectiveness":"Partially Effective","likelihood_reduction":0.525,"residual_likelihood":2,"residual_score":6,"residual_rating":"Medium","appetite_status":"Within appetite"},{"risk_id":"R12","title":"Customer data privacy breach","category":"Information security & privacy","sub_process":"Record keeping","owner":"Chief Privacy Officer","impact":5,"likelihood":2,"inherent_score":10,"inherent_rating":"Medium","mapped_controls":2,"control_ids":"C14, C15","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":1,"residual_score":5,"residual_rating":"Low","appetite_status":"Within appetite"},{"risk_id":"R13","title":"Customer consent not captured","category":"Regulatory compliance","sub_process":"Application & sourcing","owner":"Compliance Manager","impact":4,"likelihood":3,"inherent_score":12,"inherent_rating":"High","mapped_controls":1,"control_ids":"C16","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":2,"residual_score":8,"residual_rating":"Medium","appetite_status":"Within appetite"},{"risk_id":"R14","title":"Limit assigned without income verification","category":"Credit","sub_process":"Credit decision & limit","owner":"Credit Policy Manager","impact":4,"likelihood":3,"inherent_score":12,"inherent_rating":"High","mapped_controls":1,"control_ids":"C17","avg_control_score":3.0,"control_effectiveness":"Effective","likelihood_reduction":0.7,"residual_likelihood":1,"residual_score":4,"residual_rating":"Low","appetite_status":"Within appetite"},{"risk_id":"R15","title":"Unauthorised override of KYC rejection","category":"Internal fraud / conduct","sub_process":"Credit decision & limit","owner":"Head of Onboarding Ops","impact":4,"likelihood":2,"inherent_score":8,"inherent_rating":"Medium","mapped_controls":2,"control_ids":"C18, C19","avg_control_score":2.5,"control_effectiveness":"Partially Effective","likelihood_reduction":0.525,"residual_likelihood":1,"residual_score":4,"residual_rating":"Low","appetite_status":"Within appetite"},{"risk_id":"R16","title":"Onboarding SLA breach and backlog","category":"Operational / process","sub_process":"Account set-up & data","owner":"Head of Onboarding Ops","impact":3,"likelihood":4,"inherent_score":12,"inherent_rating":"High","mapped_controls":1,"control_ids":"C20","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":3,"residual_score":9,"residual_rating":"Medium","appetite_status":"Outside appetite"},{"risk_id":"R17","title":"Third-party sourcing agent misconduct","category":"Third party","sub_process":"Application & sourcing","owner":"Vendor Risk Manager","impact":4,"likelihood":4,"inherent_score":16,"inherent_rating":"High","mapped_controls":3,"control_ids":"C21, C22, C25","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":3,"residual_score":12,"residual_rating":"High","appetite_status":"Outside appetite"},{"risk_id":"R18","title":"Video KYC record not retained","category":"Regulatory compliance","sub_process":"Record keeping","owner":"Compliance Manager","impact":4,"likelihood":2,"inherent_score":8,"inherent_rating":"Medium","mapped_controls":2,"control_ids":"C04, C23","avg_control_score":2.0,"control_effectiveness":"Partially Effective","likelihood_reduction":0.35,"residual_likelihood":1,"residual_score":4,"residual_rating":"Low","appetite_status":"Within appetite"}],"controls":[{"control_id":"C01","name":"OVD checklist verification by maker","control_type":"Preventive","nature":"Manual","frequency":"Per application","owner":"Onboarding Ops","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C02","name":"OCR and image-tamper detection on uploads","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"Fraud Analytics","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C03","name":"Aadhaar e-KYC / DigiLocker validation","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"Onboarding Ops","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C04","name":"Video KYC (V-CIP) with liveness check","control_type":"Preventive","nature":"IT-dependent manual","frequency":"Per application","owner":"Onboarding Ops","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C05","name":"Real-time sanctions screening (UN/OFAC/MHA lists)","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"Financial Crime Ops","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C06","name":"PEP screening at onboarding","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"Financial Crime Ops","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C07","name":"Adverse media screening","control_type":"Detective","nature":"Automated","frequency":"Per application","owner":"Financial Crime Ops","design_rating":"Partially Effective","operating_rating":"Partially Effective","design_score":2,"operating_score":2,"control_score":2},{"control_id":"C08","name":"Customer risk rating model auto-assignment","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"KYC Policy","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C09","name":"EDD checklist with senior management sign-off","control_type":"Preventive","nature":"Manual","frequency":"Per high-risk application","owner":"KYC Policy","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C10","name":"Address verification (utility bill / field visit)","control_type":"Preventive","nature":"Manual","frequency":"Per application","owner":"Onboarding Ops","design_rating":"Partially Effective","operating_rating":"Partially Effective","design_score":2,"operating_score":2,"control_score":2},{"control_id":"C11","name":"De-duplication on PAN, mobile and email","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"Data Governance","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C12","name":"Maker-checker on data entry","control_type":"Preventive","nature":"Manual","frequency":"Per application","owner":"Onboarding Ops","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C13","name":"Daily QC sampling of onboarded files","control_type":"Detective","nature":"Manual","frequency":"Daily","owner":"Onboarding QA","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C14","name":"Role-based access and masking on KYC repository","control_type":"Preventive","nature":"Automated","frequency":"Continuous","owner":"Information Security","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C15","name":"DLP monitoring on KYC data","control_type":"Detective","nature":"Automated","frequency":"Continuous","owner":"Information Security","design_rating":"Partially Effective","operating_rating":"Ineffective","design_score":2,"operating_score":1,"control_score":1},{"control_id":"C16","name":"Mandatory time-stamped e-consent capture","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"Digital Channels","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C17","name":"Bureau pull and income verification before limit","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"Credit Policy","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C18","name":"Override authority matrix with dual sign-off","control_type":"Preventive","nature":"Manual","frequency":"Per override","owner":"Credit Policy","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3},{"control_id":"C19","name":"Monthly override review by Compliance","control_type":"Detective","nature":"Manual","frequency":"Monthly","owner":"Compliance","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C20","name":"Onboarding SLA dashboard and queue monitoring","control_type":"Detective","nature":"IT-dependent manual","frequency":"Daily","owner":"Onboarding Ops","design_rating":"Partially Effective","operating_rating":"Partially Effective","design_score":2,"operating_score":2,"control_score":2},{"control_id":"C21","name":"DSA due diligence and certification","control_type":"Preventive","nature":"Manual","frequency":"Annual","owner":"Vendor Management","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C22","name":"DSA sourcing quality review (mystery shopping)","control_type":"Detective","nature":"Manual","frequency":"Quarterly","owner":"Vendor Management","design_rating":"Partially Effective","operating_rating":"Ineffective","design_score":2,"operating_score":1,"control_score":1},{"control_id":"C23","name":"V-CIP recording retention and audit trail","control_type":"Preventive","nature":"Automated","frequency":"Per application","owner":"IT Operations","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C24","name":"Sanctions alert clearance within 24h (4-eyes)","control_type":"Detective","nature":"Manual","frequency":"Daily","owner":"Financial Crime Ops","design_rating":"Effective","operating_rating":"Partially Effective","design_score":3,"operating_score":2,"control_score":2},{"control_id":"C25","name":"Early-life fraud monitoring (first 90 days)","control_type":"Detective","nature":"Automated","frequency":"Daily","owner":"Fraud Analytics","design_rating":"Effective","operating_rating":"Effective","design_score":3,"operating_score":3,"control_score":3}],"risk_control":[{"risk_id":"R01","control_id":"C03"},{"risk_id":"R01","control_id":"C04"},{"risk_id":"R01","control_id":"C25"},{"risk_id":"R02","control_id":"C01"},{"risk_id":"R02","control_id":"C13"},{"risk_id":"R03","control_id":"C02"},{"risk_id":"R03","control_id":"C01"},{"risk_id":"R04","control_id":"C06"},{"risk_id":"R05","control_id":"C05"},{"risk_id":"R05","control_id":"C24"},{"risk_id":"R06","control_id":"C07"},{"risk_id":"R07","control_id":"C08"},{"risk_id":"R07","control_id":"C13"},{"risk_id":"R08","control_id":"C09"},{"risk_id":"R09","control_id":"C10"},{"risk_id":"R10","control_id":"C11"},{"risk_id":"R11","control_id":"C12"},{"risk_id":"R11","control_id":"C13"},{"risk_id":"R12","control_id":"C14"},{"risk_id":"R12","control_id":"C15"},{"risk_id":"R13","control_id":"C16"},{"risk_id":"R14","control_id":"C17"},{"risk_id":"R15","control_id":"C18"},{"risk_id":"R15","control_id":"C19"},{"risk_id":"R16","control_id":"C20"},{"risk_id":"R17","control_id":"C21"},{"risk_id":"R17","control_id":"C22"},{"risk_id":"R17","control_id":"C25"},{"risk_id":"R18","control_id":"C23"},{"risk_id":"R18","control_id":"C04"}],"kris":[{"kri_id":"K01","name":"Applications with incomplete KYC documents at first submission","unit":"%","linked_risks":"R02","green_max":3.0,"amber_max":5.0,"owner":"Head of Onboarding Ops"},{"kri_id":"K02","name":"Documents flagged for tampering","unit":"%","linked_risks":"R03","green_max":0.5,"amber_max":1.0,"owner":"Fraud Risk Manager"},{"kri_id":"K03","name":"Sanctions alerts not cleared within 24 hours","unit":"count","linked_risks":"R05","green_max":2.0,"amber_max":5.0,"owner":"MLRO"},{"kri_id":"K04","name":"PEP matches pending EDD for more than 7 days","unit":"count","linked_risks":"R04;R08","green_max":0.0,"amber_max":2.0,"owner":"MLRO"},{"kri_id":"K05","name":"High-risk customers onboarded without EDD sign-off","unit":"%","linked_risks":"R08","green_max":0.5,"amber_max":1.0,"owner":"KYC Policy Lead"},{"kri_id":"K06","name":"Duplicate profiles detected after onboarding","unit":"count","linked_risks":"R10","green_max":5.0,"amber_max":10.0,"owner":"Data Governance Lead"},{"kri_id":"K07","name":"Data entry error rate in QC sample","unit":"%","linked_risks":"R11;R07","green_max":2.0,"amber_max":4.0,"owner":"Data Governance Lead"},{"kri_id":"K08","name":"KYC overrides per 1,000 approvals","unit":"ratio","linked_risks":"R15","green_max":1.0,"amber_max":2.0,"owner":"Head of Onboarding Ops"},{"kri_id":"K09","name":"Applications breaching 48-hour onboarding SLA","unit":"%","linked_risks":"R16","green_max":5.0,"amber_max":10.0,"owner":"Head of Onboarding Ops"},{"kri_id":"K10","name":"Early-life fraud cases per 10,000 new cards","unit":"ratio","linked_risks":"R01;R17","green_max":3.0,"amber_max":6.0,"owner":"Fraud Risk Manager"},{"kri_id":"K11","name":"V-CIP sessions failing QA or missing recording","unit":"%","linked_risks":"R18;R01","green_max":1.0,"amber_max":3.0,"owner":"Compliance Manager"},{"kri_id":"K12","name":"Applications processed without consent record","unit":"count","linked_risks":"R13","green_max":0.0,"amber_max":3.0,"owner":"Compliance Manager"}],"kri_values":[{"kri_id":"K01","month":"2025-11","value":1.96,"rag":"Green"},{"kri_id":"K01","month":"2025-12","value":2.32,"rag":"Green"},{"kri_id":"K01","month":"2026-01","value":1.73,"rag":"Green"},{"kri_id":"K01","month":"2026-02","value":2.77,"rag":"Green"},{"kri_id":"K01","month":"2026-03","value":2.59,"rag":"Green"},{"kri_id":"K01","month":"2026-04","value":2.36,"rag":"Green"},{"kri_id":"K01","month":"2026-05","value":2.41,"rag":"Green"},{"kri_id":"K01","month":"2026-06","value":2.64,"rag":"Green"},{"kri_id":"K01","month":"2026-07","value":2.52,"rag":"Green"},{"kri_id":"K01","month":"2026-08","value":2.58,"rag":"Green"},{"kri_id":"K01","month":"2026-09","value":2.92,"rag":"Green"},{"kri_id":"K01","month":"2026-10","value":2.9,"rag":"Green"},{"kri_id":"K02","month":"2025-11","value":0.3,"rag":"Green"},{"kri_id":"K02","month":"2025-12","value":0.3,"rag":"Green"},{"kri_id":"K02","month":"2026-01","value":0.33,"rag":"Green"},{"kri_id":"K02","month":"2026-02","value":0.29,"rag":"Green"},{"kri_id":"K02","month":"2026-03","value":0.31,"rag":"Green"},{"kri_id":"K02","month":"2026-04","value":0.39,"rag":"Green"},{"kri_id":"K02","month":"2026-05","value":0.35,"rag":"Green"},{"kri_id":"K02","month":"2026-06","value":0.27,"rag":"Green"},{"kri_id":"K02","month":"2026-07","value":0.35,"rag":"Green"},{"kri_id":"K02","month":"2026-08","value":0.44,"rag":"Green"},{"kri_id":"K02","month":"2026-09","value":0.38,"rag":"Green"},{"kri_id":"K02","month":"2026-10","value":0.4,"rag":"Green"},{"kri_id":"K03","month":"2025-11","value":1.0,"rag":"Green"},{"kri_id":"K03","month":"2025-12","value":2.0,"rag":"Green"},{"kri_id":"K03","month":"2026-01","value":1.0,"rag":"Green"},{"kri_id":"K03","month":"2026-02","value":2.0,"rag":"Green"},{"kri_id":"K03","month":"2026-03","value":0.0,"rag":"Green"},{"kri_id":"K03","month":"2026-04","value":1.0,"rag":"Green"},{"kri_id":"K03","month":"2026-05","value":1.0,"rag":"Green"},{"kri_id":"K03","month":"2026-06","value":7.0,"rag":"Red"},{"kri_id":"K03","month":"2026-07","value":5.0,"rag":"Amber"},{"kri_id":"K03","month":"2026-08","value":2.0,"rag":"Green"},{"kri_id":"K03","month":"2026-09","value":1.0,"rag":"Green"},{"kri_id":"K03","month":"2026-10","value":2.0,"rag":"Green"},{"kri_id":"K04","month":"2025-11","value":0.0,"rag":"Green"},{"kri_id":"K04","month":"2025-12","value":0.0,"rag":"Green"},{"kri_id":"K04","month":"2026-01","value":1.0,"rag":"Amber"},{"kri_id":"K04","month":"2026-02","value":1.0,"rag":"Amber"},{"kri_id":"K04","month":"2026-03","value":0.0,"rag":"Green"},{"kri_id":"K04","month":"2026-04","value":0.0,"rag":"Green"},{"kri_id":"K04","month":"2026-05","value":0.0,"rag":"Green"},{"kri_id":"K04","month":"2026-06","value":1.0,"rag":"Amber"},{"kri_id":"K04","month":"2026-07","value":1.0,"rag":"Amber"},{"kri_id":"K04","month":"2026-08","value":1.0,"rag":"Amber"},{"kri_id":"K04","month":"2026-09","value":2.0,"rag":"Amber"},{"kri_id":"K04","month":"2026-10","value":0.0,"rag":"Green"},{"kri_id":"K05","month":"2025-11","value":0.58,"rag":"Amber"},{"kri_id":"K05","month":"2025-12","value":0.69,"rag":"Amber"},{"kri_id":"K05","month":"2026-01","value":0.48,"rag":"Green"},{"kri_id":"K05","month":"2026-02","value":0.38,"rag":"Green"},{"kri_id":"K05","month":"2026-03","value":0.18,"rag":"Green"},{"kri_id":"K05","month":"2026-04","value":0.45,"rag":"Green"},{"kri_id":"K05","month":"2026-05","value":1.25,"rag":"Red"},{"kri_id":"K05","month":"2026-06","value":0.34,"rag":"Green"},{"kri_id":"K05","month":"2026-07","value":0.32,"rag":"Green"},{"kri_id":"K05","month":"2026-08","value":0.42,"rag":"Green"},{"kri_id":"K05","month":"2026-09","value":0.59,"rag":"Amber"},{"kri_id":"K05","month":"2026-10","value":0.34,"rag":"Green"},{"kri_id":"K06","month":"2025-11","value":2.0,"rag":"Green"},{"kri_id":"K06","month":"2025-12","value":2.0,"rag":"Green"},{"kri_id":"K06","month":"2026-01","value":2.0,"rag":"Green"},{"kri_id":"K06","month":"2026-02","value":2.0,"rag":"Green"},{"kri_id":"K06","month":"2026-03","value":3.0,"rag":"Green"},{"kri_id":"K06","month":"2026-04","value":5.0,"rag":"Green"},{"kri_id":"K06","month":"2026-05","value":3.0,"rag":"Green"},{"kri_id":"K06","month":"2026-06","value":4.0,"rag":"Green"},{"kri_id":"K06","month":"2026-07","value":3.0,"rag":"Green"},{"kri_id":"K06","month":"2026-08","value":5.0,"rag":"Green"},{"kri_id":"K06","month":"2026-09","value":2.0,"rag":"Green"},{"kri_id":"K06","month":"2026-10","value":4.0,"rag":"Green"},{"kri_id":"K07","month":"2025-11","value":1.96,"rag":"Green"},{"kri_id":"K07","month":"2025-12","value":1.29,"rag":"Green"},{"kri_id":"K07","month":"2026-01","value":1.76,"rag":"Green"},{"kri_id":"K07","month":"2026-02","value":1.63,"rag":"Green"},{"kri_id":"K07","month":"2026-03","value":1.52,"rag":"Green"},{"kri_id":"K07","month":"2026-04","value":1.44,"rag":"Green"},{"kri_id":"K07","month":"2026-05","value":1.96,"rag":"Green"},{"kri_id":"K07","month":"2026-06","value":1.64,"rag":"Green"},{"kri_id":"K07","month":"2026-07","value":2.1,"rag":"Amber"},{"kri_id":"K07","month":"2026-08","value":1.58,"rag":"Green"},{"kri_id":"K07","month":"2026-09","value":1.81,"rag":"Green"},{"kri_id":"K07","month":"2026-10","value":1.96,"rag":"Green"},{"kri_id":"K08","month":"2025-11","value":0.66,"rag":"Green"},{"kri_id":"K08","month":"2025-12","value":0.43,"rag":"Green"},{"kri_id":"K08","month":"2026-01","value":0.54,"rag":"Green"},{"kri_id":"K08","month":"2026-02","value":0.63,"rag":"Green"},{"kri_id":"K08","month":"2026-03","value":0.55,"rag":"Green"},{"kri_id":"K08","month":"2026-04","value":0.8,"rag":"Green"},{"kri_id":"K08","month":"2026-05","value":0.81,"rag":"Green"},{"kri_id":"K08","month":"2026-06","value":0.45,"rag":"Green"},{"kri_id":"K08","month":"2026-07","value":0.49,"rag":"Green"},{"kri_id":"K08","month":"2026-08","value":0.59,"rag":"Green"},{"kri_id":"K08","month":"2026-09","value":0.82,"rag":"Green"},{"kri_id":"K08","month":"2026-10","value":1.12,"rag":"Amber"},{"kri_id":"K09","month":"2025-11","value":3.49,"rag":"Green"},{"kri_id":"K09","month":"2025-12","value":4.2,"rag":"Green"},{"kri_id":"K09","month":"2026-01","value":3.35,"rag":"Green"},{"kri_id":"K09","month":"2026-02","value":3.56,"rag":"Green"},{"kri_id":"K09","month":"2026-03","value":3.03,"rag":"Green"},{"kri_id":"K09","month":"2026-04","value":4.78,"rag":"Green"},{"kri_id":"K09","month":"2026-05","value":5.76,"rag":"Amber"},{"kri_id":"K09","month":"2026-06","value":4.91,"rag":"Green"},{"kri_id":"K09","month":"2026-07","value":6.52,"rag":"Amber"},{"kri_id":"K09","month":"2026-08","value":9.76,"rag":"Amber"},{"kri_id":"K09","month":"2026-09","value":10.77,"rag":"Red"},{"kri_id":"K09","month":"2026-10","value":10.41,"rag":"Red"},{"kri_id":"K10","month":"2025-11","value":2.24,"rag":"Green"},{"kri_id":"K10","month":"2025-12","value":2.67,"rag":"Green"},{"kri_id":"K10","month":"2026-01","value":1.8,"rag":"Green"},{"kri_id":"K10","month":"2026-02","value":1.16,"rag":"Green"},{"kri_id":"K10","month":"2026-03","value":2.46,"rag":"Green"},{"kri_id":"K10","month":"2026-04","value":2.19,"rag":"Green"},{"kri_id":"K10","month":"2026-05","value":2.59,"rag":"Green"},{"kri_id":"K10","month":"2026-06","value":3.53,"rag":"Amber"},{"kri_id":"K10","month":"2026-07","value":2.25,"rag":"Green"},{"kri_id":"K10","month":"2026-08","value":3.28,"rag":"Amber"},{"kri_id":"K10","month":"2026-09","value":6.97,"rag":"Red"},{"kri_id":"K10","month":"2026-10","value":5.83,"rag":"Amber"},{"kri_id":"K11","month":"2025-11","value":0.78,"rag":"Green"},{"kri_id":"K11","month":"2025-12","value":0.41,"rag":"Green"},{"kri_id":"K11","month":"2026-01","value":0.37,"rag":"Green"},{"kri_id":"K11","month":"2026-02","value":0.82,"rag":"Green"},{"kri_id":"K11","month":"2026-03","value":0.76,"rag":"Green"},{"kri_id":"K11","month":"2026-04","value":0.95,"rag":"Green"},{"kri_id":"K11","month":"2026-05","value":0.67,"rag":"Green"},{"kri_id":"K11","month":"2026-06","value":1.05,"rag":"Amber"},{"kri_id":"K11","month":"2026-07","value":0.59,"rag":"Green"},{"kri_id":"K11","month":"2026-08","value":0.41,"rag":"Green"},{"kri_id":"K11","month":"2026-09","value":0.19,"rag":"Green"},{"kri_id":"K11","month":"2026-10","value":3.04,"rag":"Red"},{"kri_id":"K12","month":"2025-11","value":1.0,"rag":"Amber"},{"kri_id":"K12","month":"2025-12","value":0.0,"rag":"Green"},{"kri_id":"K12","month":"2026-01","value":0.0,"rag":"Green"},{"kri_id":"K12","month":"2026-02","value":1.0,"rag":"Amber"},{"kri_id":"K12","month":"2026-03","value":5.0,"rag":"Red"},{"kri_id":"K12","month":"2026-04","value":1.0,"rag":"Amber"},{"kri_id":"K12","month":"2026-05","value":0.0,"rag":"Green"},{"kri_id":"K12","month":"2026-06","value":0.0,"rag":"Green"},{"kri_id":"K12","month":"2026-07","value":1.0,"rag":"Amber"},{"kri_id":"K12","month":"2026-08","value":0.0,"rag":"Green"},{"kri_id":"K12","month":"2026-09","value":0.0,"rag":"Green"},{"kri_id":"K12","month":"2026-10","value":0.0,"rag":"Green"}],"issues":[{"issue_id":"ISS-001","title":"KRI breach (Red): Applications processed without consent record","source":"KRI breach","risk_id":"R13","control_id":null,"kri_id":"K12","severity":"High","owner":"Compliance Manager","raised_date":"2026-04-05","due_date":"2026-05-20","closed_date":null,"status":"Open","age_days":209,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-002","title":"DLP monitoring on KYC data: design weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R12","control_id":"C15","kri_id":null,"severity":"High","owner":"Information Security","raised_date":"2026-04-16","due_date":"2026-06-15","closed_date":"2026-06-02","status":"Closed","age_days":47,"due_status":"Closed","ageing_bucket":"Closed"},{"issue_id":"ISS-003","title":"Sanctions alert clearance within 24h (4-eyes): operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R05","control_id":"C24","kri_id":null,"severity":"Medium","owner":"Financial Crime Ops","raised_date":"2026-04-18","due_date":"2026-07-17","closed_date":null,"status":"Open","age_days":196,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-004","title":"Onboarding SLA dashboard and queue monitoring: design weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R16","control_id":"C20","kri_id":null,"severity":"Medium","owner":"Onboarding Ops","raised_date":"2026-04-26","due_date":"2026-07-25","closed_date":null,"status":"Open","age_days":188,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-005","title":"De-duplication on PAN, mobile and email: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R10","control_id":"C11","kri_id":null,"severity":"Medium","owner":"Data Governance","raised_date":"2026-05-10","due_date":"2026-08-08","closed_date":null,"status":"Open","age_days":174,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-006","title":"DSA due diligence and certification: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R17","control_id":"C21","kri_id":null,"severity":"Medium","owner":"Vendor Management","raised_date":"2026-05-19","due_date":"2026-08-17","closed_date":null,"status":"Open","age_days":165,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-007","title":"Monthly override review by Compliance: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R15","control_id":"C19","kri_id":null,"severity":"Medium","owner":"Compliance","raised_date":"2026-05-25","due_date":"2026-08-23","closed_date":null,"status":"Open","age_days":159,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-008","title":"KRI breach (Red): High-risk customers onboarded without EDD sign-off","source":"KRI breach","risk_id":"R08","control_id":null,"kri_id":"K05","severity":"High","owner":"KYC Policy Lead","raised_date":"2026-06-05","due_date":"2026-07-20","closed_date":null,"status":"Open","age_days":148,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-009","title":"PEP screening at onboarding: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R04","control_id":"C06","kri_id":null,"severity":"Medium","owner":"Financial Crime Ops","raised_date":"2026-06-08","due_date":"2026-09-06","closed_date":"2026-06-30","status":"Closed","age_days":22,"due_status":"Closed","ageing_bucket":"Closed"},{"issue_id":"ISS-010","title":"KRI breach (Red): Sanctions alerts not cleared within 24 hours","source":"KRI breach","risk_id":"R05","control_id":null,"kri_id":"K03","severity":"High","owner":"MLRO","raised_date":"2026-07-05","due_date":"2026-08-19","closed_date":null,"status":"Open","age_days":118,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-011","title":"EDD checklist with senior management sign-off: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R08","control_id":"C09","kri_id":null,"severity":"Medium","owner":"KYC Policy","raised_date":"2026-07-10","due_date":"2026-10-08","closed_date":null,"status":"Open","age_days":113,"due_status":"Overdue","ageing_bucket":"90+ days"},{"issue_id":"ISS-012","title":"Adverse media screening: design weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R06","control_id":"C07","kri_id":null,"severity":"Medium","owner":"Financial Crime Ops","raised_date":"2026-08-06","due_date":"2026-11-04","closed_date":"2026-10-26","status":"Closed","age_days":81,"due_status":"Closed","ageing_bucket":"Closed"},{"issue_id":"ISS-013","title":"Daily QC sampling of onboarded files: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R02","control_id":"C13","kri_id":null,"severity":"Medium","owner":"Onboarding QA","raised_date":"2026-08-12","due_date":"2026-11-10","closed_date":null,"status":"Open","age_days":80,"due_status":"On track","ageing_bucket":"61-90 days"},{"issue_id":"ISS-014","title":"Mandatory time-stamped e-consent capture: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R13","control_id":"C16","kri_id":null,"severity":"Medium","owner":"Digital Channels","raised_date":"2026-08-16","due_date":"2026-11-14","closed_date":null,"status":"Open","age_days":76,"due_status":"On track","ageing_bucket":"61-90 days"},{"issue_id":"ISS-015","title":"V-CIP recording retention and audit trail: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R18","control_id":"C23","kri_id":null,"severity":"Medium","owner":"IT Operations","raised_date":"2026-09-13","due_date":"2026-12-12","closed_date":null,"status":"Open","age_days":48,"due_status":"On track","ageing_bucket":"31-60 days"},{"issue_id":"ISS-016","title":"DSA sourcing quality review (mystery shopping): design weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R17","control_id":"C22","kri_id":null,"severity":"High","owner":"Vendor Management","raised_date":"2026-09-26","due_date":"2026-11-25","closed_date":null,"status":"Open","age_days":35,"due_status":"On track","ageing_bucket":"31-60 days"},{"issue_id":"ISS-017","title":"OVD checklist verification by maker: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R02","control_id":"C01","kri_id":null,"severity":"Medium","owner":"Onboarding Ops","raised_date":"2026-09-26","due_date":"2026-12-25","closed_date":null,"status":"Open","age_days":35,"due_status":"On track","ageing_bucket":"31-60 days"},{"issue_id":"ISS-018","title":"Video KYC (V-CIP) with liveness check: operating weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R01","control_id":"C04","kri_id":null,"severity":"Medium","owner":"Onboarding Ops","raised_date":"2026-09-27","due_date":"2026-12-26","closed_date":null,"status":"Open","age_days":34,"due_status":"On track","ageing_bucket":"31-60 days"},{"issue_id":"ISS-019","title":"Address verification (utility bill / field visit): design weakness identified in RCSA","source":"RCSA control weakness","risk_id":"R09","control_id":"C10","kri_id":null,"severity":"Medium","owner":"Onboarding Ops","raised_date":"2026-09-27","due_date":"2026-12-26","closed_date":null,"status":"Open","age_days":34,"due_status":"On track","ageing_bucket":"31-60 days"},{"issue_id":"ISS-020","title":"KRI breach (Red): Applications breaching 48-hour onboarding SLA","source":"KRI breach","risk_id":"R16","control_id":null,"kri_id":"K09","severity":"High","owner":"Head of Onboarding Ops","raised_date":"2026-10-05","due_date":"2026-11-19","closed_date":null,"status":"Open","age_days":26,"due_status":"On track","ageing_bucket":"0-30 days"},{"issue_id":"ISS-021","title":"KRI breach (Red): Early-life fraud cases per 10,000 new cards","source":"KRI breach","risk_id":"R01","control_id":null,"kri_id":"K10","severity":"High","owner":"Fraud Risk Manager","raised_date":"2026-10-05","due_date":"2026-11-19","closed_date":null,"status":"Open","age_days":26,"due_status":"On track","ageing_bucket":"0-30 days"},{"issue_id":"ISS-022","title":"KRI breach (Red): V-CIP sessions failing QA or missing recording","source":"KRI breach","risk_id":"R18","control_id":null,"kri_id":"K11","severity":"High","owner":"Compliance Manager","raised_date":"2026-10-31","due_date":"2026-12-15","closed_date":null,"status":"Open","age_days":0,"due_status":"On track","ageing_bucket":"0-30 days"}]};
+
+const BAND_COL = { Low: "var(--good)", Medium: "var(--warn)", High: "var(--serious)", Critical: "var(--critical)" };
+const RAG_COL = { Green: "var(--good)", Amber: "var(--warn)", Red: "var(--critical)", Missing: "var(--missing)" };
+const EFF_COL = { "Effective": "var(--good)", "Partially Effective": "var(--warn)", "Ineffective": "var(--critical)" };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const band = (s) => (s >= 20 ? "Critical" : s >= 12 ? "High" : s >= 6 ? "Medium" : "Low");
+const monthLabel = (m) => new Date(m + "-01T00:00:00").toLocaleString("en-GB", { month: "short", year: "2-digit" });
+const pill = (text, col) => `<span class="pill" style="background:${col}">${esc(text)}</span>`;
+
+const state = { cat: "", sub: "", own: "", cell: null, kri: null, sort: { key: "residual_score", dir: -1 } };
+
+// ---------- theme ----------
+(function theme() {
+  let saved = null;
+  try { saved = localStorage.getItem("rcsa-theme"); } catch (e) {}
+  if (saved) document.documentElement.dataset.theme = saved;
+  $("theme").addEventListener("click", () => {
+    const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("rcsa-theme", next); } catch (e) {}
+  });
+})();
+
+// ---------- tooltip ----------
+const tip = $("tip");
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.style.display = "block";
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - pad;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+const hideTip = () => { tip.style.display = "none"; };
+
+// ---------- filters ----------
+function fillSelect(el, label, values) {
+  el.innerHTML = `<option value="">All</option>` + [...new Set(values)].sort().map((v) => `<option>${esc(v)}</option>`).join("");
+  el.setAttribute("aria-label", label);
+}
+function filteredRisks(ignoreCell = false) {
+  return D.risks.filter((r) =>
+    (!state.cat || r.category === state.cat) && (!state.sub || r.sub_process === state.sub) && (!state.own || r.owner === state.own) &&
+    (ignoreCell || !state.cell || (state.cell.kind === "inh" ? r.likelihood : r.residual_likelihood) === state.cell.l && r.impact === state.cell.i));
+}
+
+// ---------- tiles ----------
+function renderTiles() {
+  const rs = filteredRisks();
+  const latest = D.months[D.months.length - 1];
+  const kLatest = D.kri_values.filter((v) => v.month === latest);
+  const openIss = D.issues.filter((i) => i.status === "Open" && rs.some((r) => r.risk_id === i.risk_id));
+  const avg = (a, k) => (a.length ? a.reduce((s, x) => s + x[k], 0) / a.length : 0);
+  const tiles = [
+    ["Risks in view", rs.length, `${D.controls.length} controls in library`],
+    ["High + Critical: inherent → residual", `${rs.filter((r) => ["High", "Critical"].includes(r.inherent_rating)).length} → ${rs.filter((r) => ["High", "Critical"].includes(r.residual_rating)).length}`, "after controls"],
+    ["Avg score: inherent → residual", `${avg(rs, "inherent_score").toFixed(1)} → ${avg(rs, "residual_score").toFixed(1)}`, rs.length ? `${Math.round((1 - avg(rs, "residual_score") / avg(rs, "inherent_score")) * 100)}% reduction` : ""],
+    ["Outside appetite", rs.filter((r) => r.appetite_status === "Outside appetite").length, `residual > ${D.meta.appetite}`],
+    [`KRIs Red, ${monthLabel(latest)}`, `${kLatest.filter((v) => v.rag === "Red").length} of ${kLatest.length}`, `${kLatest.filter((v) => v.rag === "Amber").length} Amber`],
+    ["Open / overdue issues", `${openIss.length} / ${openIss.filter((i) => i.due_status === "Overdue").length}`, "for risks in view"],
+  ];
+  $("tiles").innerHTML = tiles.map(([l, v, n]) => `<div class="tile"><div class="lab">${esc(l)}</div><div class="val">${esc(v)}</div><div class="note">${esc(n)}</div></div>`).join("");
+}
+
+// ---------- heat maps ----------
+function renderHeat(el, kind) {
+  const rs = filteredRisks(true);
+  const lk = kind === "inh" ? "likelihood" : "residual_likelihood";
+  let html = "";
+  for (let i = 5; i >= 1; i--) {
+    html += `<div class="ax">${i}</div>`;
+    for (let l = 1; l <= 5; l++) {
+      const hits = rs.filter((r) => r.impact === i && r[lk] === l);
+      const sel = state.cell && state.cell.kind === kind && state.cell.i === i && state.cell.l === l;
+      html += `<div class="hc ${hits.length ? "has" : "empty"} ${sel ? "sel" : ""}" style="background:${BAND_COL[band(i * l)]}" data-i="${i}" data-l="${l}" data-k="${kind}"
+        ${hits.length ? `role="button" tabindex="0" aria-label="Impact ${i}, likelihood ${l}: ${hits.length} risks"` : ""}>${hits.length || ""}</div>`;
+    }
+  }
+  html += `<div></div>` + [1, 2, 3, 4, 5].map((l) => `<div class="ax">${l}</div>`).join("");
+  el.innerHTML = html;
+  el.querySelectorAll(".hc.has").forEach((c) => {
+    const i = +c.dataset.i, l = +c.dataset.l;
+    const hits = rs.filter((r) => r.impact === i && r[lk] === l);
+    c.addEventListener("mousemove", (ev) => showTip(`<b>Impact ${i} × likelihood ${l} = ${i * l} (${band(i * l)})</b><br>` + hits.map((r) => `${r.risk_id} ${esc(r.title)}`).join("<br>"), ev));
+    c.addEventListener("mouseleave", hideTip);
+    const pick = () => { const same = state.cell && state.cell.kind === kind && state.cell.i === i && state.cell.l === l; state.cell = same ? null : { kind, i, l }; render(); };
+    c.addEventListener("click", pick);
+    c.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
+}
+
+// ---------- KRI matrix ----------
+function renderRag() {
+  const head = `<tr><th></th>${D.months.map((m) => `<th>${monthLabel(m)}</th>`).join("")}</tr>`;
+  const rows = D.kris.map((k) => {
+    const cells = D.months.map((m) => {
+      const v = D.kri_values.find((x) => x.kri_id === k.kri_id && x.month === m);
+      const rag = v ? v.rag : "Missing";
+      return `<td class="c" style="background:${RAG_COL[rag]}" data-k="${k.kri_id}" data-m="${m}">${rag[0]}</td>`;
+    }).join("");
+    return `<tr class="${state.kri === k.kri_id ? "sel" : ""}"><td class="k" data-k="${k.kri_id}" title="${esc(k.name)}">${k.kri_id} ${esc(k.name)}</td>${cells}</tr>`;
+  }).join("");
+  $("ragMatrix").innerHTML = head + rows;
+  $("ragMatrix").querySelectorAll("td.c").forEach((td) => {
+    const k = D.kris.find((x) => x.kri_id === td.dataset.k);
+    const v = D.kri_values.find((x) => x.kri_id === td.dataset.k && x.month === td.dataset.m);
+    td.addEventListener("mousemove", (ev) => showTip(`<b>${k.kri_id} · ${monthLabel(td.dataset.m)}</b><br>${esc(k.name)}<br>Value <b>${v ? fmtK(v.value, k) : "–"}</b> · ${v ? v.rag : "Missing"}<br>Green ≤ ${fmtK(k.green_max, k)} · Red &gt; ${fmtK(k.amber_max, k)}`, ev));
+    td.addEventListener("mouseleave", hideTip);
+    td.addEventListener("click", () => { state.kri = td.dataset.k; renderRag(); renderKri(); });
+  });
+  $("ragMatrix").querySelectorAll("td.k").forEach((td) => td.addEventListener("click", () => { state.kri = td.dataset.k; renderRag(); renderKri(); }));
+}
+const fmtK = (v, k) => (k.unit === "%" ? `${(+v).toFixed(2)}%` : k.unit === "count" ? `${Math.round(v)}` : (+v).toFixed(2));
+
+// ---------- KRI line chart ----------
+function renderKri() {
+  const k = D.kris.find((x) => x.kri_id === state.kri) || D.kris[0];
+  state.kri = k.kri_id;
+  const vals = D.months.map((m) => D.kri_values.find((x) => x.kri_id === k.kri_id && x.month === m) || null);
+  $("kriTitle").textContent = `${k.kri_id} – ${k.name}`;
+  $("kriNote").textContent = `Owner: ${k.owner} · Linked risks: ${k.linked_risks.replace(/;/g, ", ")} · Unit: ${k.unit}`;
+  const box = $("kriChart"), W = Math.max(300, box.clientWidth || 520), H = 230, m = { l: 44, r: 70, t: 12, b: 26 };
+  const ys = vals.filter(Boolean).map((v) => v.value).concat([k.green_max, k.amber_max]);
+  const yMax = Math.max(...ys) * 1.15 || 1, x = (i) => m.l + (i * (W - m.l - m.r)) / (D.months.length - 1), y = (v) => H - m.b - (v / yMax) * (H - m.t - m.b);
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(k.name)} monthly values with green and red limits">`;
+  s += ticks.map((t) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${m.l - 6}" y="${y(t) + 4}" text-anchor="end">${fmtK(t, k)}</text>`).join("");
+  for (const [val, lab] of [[k.green_max, "Green limit"], [k.amber_max, "Red limit"]])
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(val)}" y2="${y(val)}" stroke="var(--ink-3)" stroke-dasharray="4 4"/><text x="${W - m.r + 4}" y="${y(val) + 4}">${lab}</text>`;
+  const pts = vals.map((v, i) => (v ? [x(i), y(v.value)] : null));
+  let path = "", pen = false;
+  pts.forEach((p) => { if (!p) { pen = false; return; } path += `${pen ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`; pen = true; });
+  s += `<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+  pts.forEach((p, i) => { if (p) s += `<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="${RAG_COL[vals[i].rag]}" stroke="var(--surface)" stroke-width="2"/>`; });
+  const step = W < 420 ? 3 : 2, last = D.months.length - 1;
+  D.months.forEach((mo, i) => { if ((i % step === 0 && last - i >= step) || i === last) s += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${monthLabel(mo)}</text>`; });
+  s += `<line id="xh" y1="${m.t}" y2="${H - m.b}" stroke="var(--ink-3)" visibility="hidden"/><rect x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent" id="hit"/></svg>`;
+  box.innerHTML = s;
+  const svg = box.querySelector("svg"), xh = svg.querySelector("#xh");
+  svg.querySelector("#hit").addEventListener("mousemove", (ev) => {
+    const r = svg.getBoundingClientRect(), px = ((ev.clientX - r.left) / r.width) * W;
+    const i = Math.max(0, Math.min(D.months.length - 1, Math.round(((px - m.l) / (W - m.l - m.r)) * (D.months.length - 1))));
+    xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.setAttribute("visibility", "visible");
+    const v = vals[i];
+    showTip(`<b>${monthLabel(D.months[i])}</b><br>${v ? `${fmtK(v.value, k)} · ${v.rag}` : "No submission"}`, ev);
+  });
+  svg.querySelector("#hit").addEventListener("mouseleave", () => { xh.setAttribute("visibility", "hidden"); hideTip(); });
+}
+
+// ---------- alerts ----------
+function renderAlerts() {
+  const n = D.months.length, latest = D.months[n - 1], prev = D.months[n - 2];
+  const items = [];
+  for (const k of D.kris) {
+    const series = D.months.map((m) => D.kri_values.find((x) => x.kri_id === k.kri_id && x.month === m));
+    const cur = series[n - 1], p = series[n - 2];
+    if (!cur) { items.push([3, "Missing", `${k.kri_id} ${k.name}: no value submitted for ${monthLabel(latest)}`]); continue; }
+    let run = 0; for (let i = n - 1; i >= 0 && series[i] && series[i].rag === "Red"; i--) run++;
+    let bad = 0; for (let i = n - 1; i >= 0 && series[i] && series[i].rag !== "Green"; i--) bad++;
+    if (cur.rag === "Red") items.push([run >= 2 ? 0 : 1, "Red", `${k.kri_id} ${k.name}: ${fmtK(cur.value, k)} – ${run >= 2 ? `Red for ${run} months, escalate` : "new Red breach"}`]);
+    else if (cur.rag === "Amber" && bad >= 3) items.push([2, "Amber", `${k.kri_id} ${k.name}: Amber or worse for ${bad} months`]);
+    else if (cur.rag === "Amber" && p && p.rag === "Green") items.push([2, "Amber", `${k.kri_id} ${k.name}: moved Green → Amber (${fmtK(cur.value, k)})`]);
+    else if (cur.rag === "Green" && p && p.rag !== "Green") items.push([4, "Green", `${k.kri_id} ${k.name}: recovered to Green`]);
+  }
+  items.sort((a, b) => a[0] - b[0]);
+  $("alerts").innerHTML = items.length ? items.map(([, rag, t]) => `<li>${pill(rag, RAG_COL[rag])} ${esc(t)}</li>`).join("") : `<li class="muted">No alerts for ${monthLabel(latest)}.</li>`;
+}
+
+// ---------- issues ----------
+function renderIssues() {
+  const order = ["0-30 days", "31-60 days", "61-90 days", "90+ days"];
+  const rs = new Set(filteredRisks().map((r) => r.risk_id));
+  const open = D.issues.filter((i) => i.status === "Open" && rs.has(i.risk_id));
+  const counts = order.map((b) => open.filter((i) => i.ageing_bucket === b).length);
+  const box = $("ageChart"), W = Math.max(280, box.clientWidth || 420), H = 200, m = { l: 30, r: 10, t: 16, b: 26 };
+  const max = Math.max(1, ...counts), bw = (W - m.l - m.r) / order.length;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Open issues by age bucket">`;
+  for (let t = 0; t <= max; t += Math.max(1, Math.ceil(max / 4))) {
+    const yy = H - m.b - (t / max) * (H - m.t - m.b);
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${m.l - 6}" y="${yy + 4}" text-anchor="end">${t}</text>`;
+  }
+  counts.forEach((c, i) => {
+    const h = (c / max) * (H - m.t - m.b), x0 = m.l + i * bw + bw * 0.2, yy = H - m.b - h;
+    s += `<path d="M${x0},${H - m.b} V${yy + 4} Q${x0},${yy} ${x0 + 4},${yy} H${x0 + bw * 0.6 - 4} Q${x0 + bw * 0.6},${yy} ${x0 + bw * 0.6},${yy + 4} V${H - m.b} Z" fill="var(--accent)" data-i="${i}" ${c ? "" : 'visibility="hidden"'}/>`;
+    s += `<text x="${x0 + bw * 0.3}" y="${yy - 5}" text-anchor="middle" style="fill:var(--ink)">${c}</text><text x="${x0 + bw * 0.3}" y="${H - 8}" text-anchor="middle">${order[i]}</text>`;
+    s += `<rect x="${m.l + i * bw}" y="${m.t}" width="${bw}" height="${H - m.t - m.b}" fill="transparent" class="bh" data-i="${i}"/>`;
+  });
+  box.innerHTML = s + "</svg>";
+  box.querySelectorAll(".bh").forEach((r) => {
+    const i = +r.dataset.i, list = open.filter((x) => x.ageing_bucket === order[i]);
+    r.addEventListener("mousemove", (ev) => showTip(`<b>${order[i]}: ${list.length} open</b><br>` + list.map((x) => `${x.issue_id} ${esc(x.title)}`).slice(0, 8).join("<br>"), ev));
+    r.addEventListener("mouseleave", hideTip);
+  });
+  const od = open.filter((i) => i.due_status === "Overdue").sort((a, b) => b.age_days - a.age_days);
+  $("overdue").innerHTML = `<tr><th>Issue</th><th>Title</th><th>Owner</th><th class="num">Age (days)</th><th>Due</th></tr>` +
+    (od.length ? od.map((i) => `<tr><td>${i.issue_id}</td><td>${esc(i.title)}</td><td>${esc(i.owner)}</td><td class="num">${i.age_days}</td><td>${i.due_date}</td></tr>`).join("")
+      : `<tr><td colspan="5" class="muted">No overdue issues for the risks in view.</td></tr>`);
+}
+
+// ---------- register & controls ----------
+function renderRegister() {
+  const rs = filteredRisks().slice();
+  const { key, dir } = state.sort;
+  rs.sort((a, b) => (a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0) * dir);
+  const cols = [["risk_id", "ID"], ["title", "Risk"], ["category", "Category"], ["owner", "Owner"], ["inherent_score", "Inherent", true],
+    ["avg_control_score", "Avg control", true], ["residual_score", "Residual", true], ["appetite_status", "Appetite"]];
+  $("regCount").textContent = `– ${rs.length} of ${D.risks.length} risks`;
+  $("register").innerHTML = `<tr>${cols.map(([k, l, n]) => `<th class="sortable ${n ? "num" : ""}" data-k="${k}" aria-sort="${state.sort.key === k ? (dir > 0 ? "ascending" : "descending") : "none"}">${l}${state.sort.key === k ? (dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("")}</tr>` +
+    rs.map((r) => `<tr><td>${r.risk_id}</td><td>${esc(r.title)}<div class="muted" style="font-size:12px">Controls: ${esc(r.control_ids)}</div></td><td>${esc(r.category)}</td><td>${esc(r.owner)}</td>
+      <td class="num">${r.inherent_score} ${pill(r.inherent_rating, BAND_COL[r.inherent_rating])}</td><td class="num">${r.avg_control_score.toFixed(2)}</td>
+      <td class="num">${r.residual_score} ${pill(r.residual_rating, BAND_COL[r.residual_rating])}</td>
+      <td>${r.appetite_status === "Outside appetite" ? pill("Outside", "var(--critical)") : '<span class="muted">Within</span>'}</td></tr>`).join("");
+  $("register").querySelectorAll("th.sortable").forEach((th) => th.addEventListener("click", () => {
+    const k = th.dataset.k; state.sort = { key: k, dir: state.sort.key === k ? -state.sort.dir : -1 }; renderRegister();
+  }));
+}
+function renderControls() {
+  const rs = new Set(filteredRisks().map((r) => r.risk_id));
+  const used = new Set(D.risk_control.filter((m) => rs.has(m.risk_id)).map((m) => m.control_id));
+  const cs = D.controls.filter((c) => used.has(c.control_id));
+  $("controls").innerHTML = `<tr><th>ID</th><th>Control</th><th>Type</th><th>Nature</th><th>Owner</th><th>Design</th><th>Operating</th><th class="num">Score</th></tr>` +
+    cs.map((c) => `<tr><td>${c.control_id}</td><td>${esc(c.name)}</td><td>${c.control_type}</td><td>${esc(c.nature)}</td><td>${esc(c.owner)}</td>
+      <td>${pill(c.design_rating, EFF_COL[c.design_rating])}</td><td>${pill(c.operating_rating, EFF_COL[c.operating_rating])}</td><td class="num">${c.control_score}</td></tr>`).join("");
+}
+
+function render() {
+  const c = state.cell;
+  $("cellChip").classList.toggle("on", !!c);
+  if (c) $("cellChipText").textContent = `${c.kind === "inh" ? "Inherent" : "Residual"} cell: impact ${c.i} × likelihood ${c.l}`;
+  renderTiles(); renderHeat($("heatInh"), "inh"); renderHeat($("heatRes"), "res"); renderIssues(); renderRegister(); renderControls();
+}
+
+function init() {
+  $("subtitle").textContent = `${D.meta.process} · ${D.risks.length} risks · ${D.controls.length} controls · ${D.kris.length} KRIs × ${D.months.length} months · as of ${new Date(D.meta.as_of + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+  $("appetite").textContent = D.meta.appetite;
+  $("bandLegend").innerHTML = [["Low", "1–5"], ["Medium", "6–11"], ["High", "12–19"], ["Critical", "20–25"]].map(([b, r]) => `<span><span class="sw" style="background:${BAND_COL[b]}"></span>${b} (${r})</span>`).join("");
+  fillSelect($("fCat"), "Risk category", D.risks.map((r) => r.category));
+  fillSelect($("fSub"), "Sub-process", D.risks.map((r) => r.sub_process));
+  fillSelect($("fOwn"), "Risk owner", D.risks.map((r) => r.owner));
+  $("fCat").onchange = (e) => { state.cat = e.target.value; render(); };
+  $("fSub").onchange = (e) => { state.sub = e.target.value; render(); };
+  $("fOwn").onchange = (e) => { state.own = e.target.value; render(); };
+  $("clearCell").onclick = () => { state.cell = null; render(); };
+  $("reset").onclick = () => { Object.assign(state, { cat: "", sub: "", own: "", cell: null }); ["fCat", "fSub", "fOwn"].forEach((id) => ($(id).value = "")); render(); };
+  const worst = D.kris.find((k) => D.kri_values.some((v) => v.kri_id === k.kri_id && v.month === D.months[D.months.length - 1] && v.rag === "Red"));
+  state.kri = (worst || D.kris[0]).kri_id;
+  renderRag(); renderKri(); renderAlerts(); render();
+  let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { renderKri(); renderIssues(); }, 150); });
+}
+init();
+</script>
+</body>
+</html>
