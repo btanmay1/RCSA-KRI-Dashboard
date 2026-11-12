@@ -1,0 +1,13 @@
+kri_id,name,unit,linked_risks,green_max,amber_max,owner
+K01,Applications with incomplete KYC documents at first submission,%,R02,3.0,5.0,Head of Onboarding Ops
+K02,Documents flagged for tampering,%,R03,0.5,1.0,Fraud Risk Manager
+K03,Sanctions alerts not cleared within 24 hours,count,R05,2.0,5.0,MLRO
+K04,PEP matches pending EDD for more than 7 days,count,R04;R08,0.0,2.0,MLRO
+K05,High-risk customers onboarded without EDD sign-off,%,R08,0.5,1.0,KYC Policy Lead
+K06,Duplicate profiles detected after onboarding,count,R10,5.0,10.0,Data Governance Lead
+K07,Data entry error rate in QC sample,%,R11;R07,2.0,4.0,Data Governance Lead
+K08,"KYC overrides per 1,000 approvals",ratio,R15,1.0,2.0,Head of Onboarding Ops
+K09,Applications breaching 48-hour onboarding SLA,%,R16,5.0,10.0,Head of Onboarding Ops
+K10,"Early-life fraud cases per 10,000 new cards",ratio,R01;R17,3.0,6.0,Fraud Risk Manager
+K11,V-CIP sessions failing QA or missing recording,%,R18;R01,1.0,3.0,Compliance Manager
+K12,Applications processed without consent record,count,R13,0.0,3.0,Compliance Manager

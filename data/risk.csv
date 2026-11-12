@@ -1,0 +1,19 @@
+risk_id,title,description,category,sub_process,owner,impact,likelihood
+R01,Customer identity not verified,Account opened for an impersonated or synthetic identity because identity was not verified against a reliable source.,Fraud,Identity & document verification,Head of Onboarding Ops,5,4
+R02,Incomplete KYC documentation,Card issued with missing officially valid documents (OVD) or proof of address.,Regulatory compliance,Identity & document verification,Head of Onboarding Ops,4,4
+R03,Forged or tampered documents accepted,Altered or counterfeit documents are not detected at verification.,Fraud,Identity & document verification,Fraud Risk Manager,5,3
+R04,PEP not identified at onboarding,Politically exposed person onboarded without being identified and escalated.,Financial crime (AML),Screening,MLRO,4,3
+R05,Sanctions screening miss,Sanctioned individual onboarded because the screening hit was missed or wrongly discounted.,Financial crime (Sanctions),Screening,MLRO,5,2
+R06,Adverse media not screened,Negative news on the applicant is not considered in the onboarding decision.,Financial crime (AML),Screening,MLRO,3,3
+R07,Incorrect customer risk rating,"Customer assigned a low AML risk rating that does not reflect occupation, geography or product.",Financial crime (AML),Customer due diligence,KYC Policy Lead,4,3
+R08,EDD not performed for high-risk customers,High-risk customers onboarded without enhanced due diligence and senior sign-off.,Financial crime (AML),Customer due diligence,KYC Policy Lead,5,3
+R09,Address not verified,"Communication address is not verified, leading to card interception or misdelivery.",Fraud,Identity & document verification,Head of Onboarding Ops,3,3
+R10,Duplicate customer profiles created,"Same customer onboarded under more than one profile, breaking single-customer view and exposure limits.",Data management,Account set-up & data,Data Governance Lead,3,4
+R11,Customer data captured incorrectly,"Manual keying errors in name, DOB, PAN or income flow into credit and AML systems.",Data management,Account set-up & data,Data Governance Lead,3,4
+R12,Customer data privacy breach,KYC images or personal data accessed or exfiltrated without authorisation during onboarding.,Information security & privacy,Record keeping,Chief Privacy Officer,5,2
+R13,Customer consent not captured,Bureau pull or data processing carried out without recorded customer consent.,Regulatory compliance,Application & sourcing,Compliance Manager,4,3
+R14,Limit assigned without income verification,Credit limit set before bureau check and income verification are complete.,Credit,Credit decision & limit,Credit Policy Manager,4,3
+R15,Unauthorised override of KYC rejection,A rejected application is overridden without the required authority.,Internal fraud / conduct,Credit decision & limit,Head of Onboarding Ops,4,2
+R16,Onboarding SLA breach and backlog,"Volumes exceed capacity, causing SLA breaches and pressure to shortcut checks.",Operational / process,Account set-up & data,Head of Onboarding Ops,3,4
+R17,Third-party sourcing agent misconduct,Direct selling agents (DSA) submit manipulated applications or mis-sell the product.,Third party,Application & sourcing,Vendor Risk Manager,4,4
+R18,Video KYC record not retained,V-CIP session recordings or audit trails are not stored as regulations require.,Regulatory compliance,Record keeping,Compliance Manager,4,2

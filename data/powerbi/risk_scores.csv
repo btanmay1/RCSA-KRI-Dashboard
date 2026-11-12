@@ -1,0 +1,19 @@
+risk_id,title,category,sub_process,owner,impact,likelihood,inherent_score,inherent_rating,mapped_controls,control_ids,avg_control_score,control_effectiveness,likelihood_reduction,residual_likelihood,residual_score,residual_rating,appetite_status
+R01,Customer identity not verified,Fraud,Identity & document verification,Head of Onboarding Ops,5,4,20,Critical,3,"C03, C04, C25",2.67,Partially Effective,0.583,2,10,Medium,Outside appetite
+R02,Incomplete KYC documentation,Regulatory compliance,Identity & document verification,Head of Onboarding Ops,4,4,16,High,2,"C01, C13",2.0,Partially Effective,0.35,3,12,High,Outside appetite
+R03,Forged or tampered documents accepted,Fraud,Identity & document verification,Fraud Risk Manager,5,3,15,High,2,"C01, C02",2.5,Partially Effective,0.525,1,5,Low,Within appetite
+R04,PEP not identified at onboarding,Financial crime (AML),Screening,MLRO,4,3,12,High,1,C06,2.0,Partially Effective,0.35,2,8,Medium,Within appetite
+R05,Sanctions screening miss,Financial crime (Sanctions),Screening,MLRO,5,2,10,Medium,2,"C05, C24",2.5,Partially Effective,0.525,1,5,Low,Within appetite
+R06,Adverse media not screened,Financial crime (AML),Screening,MLRO,3,3,9,Medium,1,C07,2.0,Partially Effective,0.35,2,6,Medium,Within appetite
+R07,Incorrect customer risk rating,Financial crime (AML),Customer due diligence,KYC Policy Lead,4,3,12,High,2,"C08, C13",2.5,Partially Effective,0.525,1,4,Low,Within appetite
+R08,EDD not performed for high-risk customers,Financial crime (AML),Customer due diligence,KYC Policy Lead,5,3,15,High,1,C09,2.0,Partially Effective,0.35,2,10,Medium,Outside appetite
+R09,Address not verified,Fraud,Identity & document verification,Head of Onboarding Ops,3,3,9,Medium,1,C10,2.0,Partially Effective,0.35,2,6,Medium,Within appetite
+R10,Duplicate customer profiles created,Data management,Account set-up & data,Data Governance Lead,3,4,12,High,1,C11,2.0,Partially Effective,0.35,3,9,Medium,Outside appetite
+R11,Customer data captured incorrectly,Data management,Account set-up & data,Data Governance Lead,3,4,12,High,2,"C12, C13",2.5,Partially Effective,0.525,2,6,Medium,Within appetite
+R12,Customer data privacy breach,Information security & privacy,Record keeping,Chief Privacy Officer,5,2,10,Medium,2,"C14, C15",2.0,Partially Effective,0.35,1,5,Low,Within appetite
+R13,Customer consent not captured,Regulatory compliance,Application & sourcing,Compliance Manager,4,3,12,High,1,C16,2.0,Partially Effective,0.35,2,8,Medium,Within appetite
+R14,Limit assigned without income verification,Credit,Credit decision & limit,Credit Policy Manager,4,3,12,High,1,C17,3.0,Effective,0.7,1,4,Low,Within appetite
+R15,Unauthorised override of KYC rejection,Internal fraud / conduct,Credit decision & limit,Head of Onboarding Ops,4,2,8,Medium,2,"C18, C19",2.5,Partially Effective,0.525,1,4,Low,Within appetite
+R16,Onboarding SLA breach and backlog,Operational / process,Account set-up & data,Head of Onboarding Ops,3,4,12,High,1,C20,2.0,Partially Effective,0.35,3,9,Medium,Outside appetite
+R17,Third-party sourcing agent misconduct,Third party,Application & sourcing,Vendor Risk Manager,4,4,16,High,3,"C21, C22, C25",2.0,Partially Effective,0.35,3,12,High,Outside appetite
+R18,Video KYC record not retained,Regulatory compliance,Record keeping,Compliance Manager,4,2,8,Medium,2,"C04, C23",2.0,Partially Effective,0.35,1,4,Low,Within appetite

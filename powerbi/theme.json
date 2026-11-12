@@ -1,0 +1,13 @@
+{
+  "name": "RCSA KRI",
+  "dataColors": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"],
+  "good": "#0ca30c",
+  "neutral": "#fab219",
+  "bad": "#d03b3b",
+  "maximum": "#d03b3b",
+  "center": "#fab219",
+  "minimum": "#0ca30c",
+  "background": "#fcfcfb",
+  "foreground": "#0b0b0b",
+  "tableAccent": "#1f3864"
+}

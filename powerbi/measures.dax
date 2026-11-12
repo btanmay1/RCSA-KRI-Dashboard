@@ -1,0 +1,119 @@
+// =====================================================================================
+// DAX measures for the RCSA / KRI dashboard.
+// Tables (import from data/powerbi/*.csv):
+//   risk_scores, control_scores, risk_control, kri_rag, issue_ageing
+//   plus calculated tables DimMonth and DimRAG defined at the bottom of this file.
+// Relationships:
+//   risk_scores[risk_id]       1 -> * risk_control[risk_id]
+//   control_scores[control_id] 1 -> * risk_control[control_id]
+//   risk_scores[risk_id]       1 -> * issue_ageing[risk_id]
+//   DimMonth[month]            1 -> * kri_rag[month]
+// =====================================================================================
+
+// ---------- Risk & control ----------
+Risks Assessed = DISTINCTCOUNT ( risk_scores[risk_id] )
+
+Controls Mapped = DISTINCTCOUNT ( control_scores[control_id] )
+
+Avg Inherent Score = AVERAGE ( risk_scores[inherent_score] )
+
+Avg Residual Score = AVERAGE ( risk_scores[residual_score] )
+
+Risk Reduction % =
+DIVIDE ( [Avg Inherent Score] - [Avg Residual Score], [Avg Inherent Score] )
+
+Inherent High or Critical =
+CALCULATE ( [Risks Assessed], risk_scores[inherent_rating] IN { "High", "Critical" } )
+
+Residual High or Critical =
+CALCULATE ( [Risks Assessed], risk_scores[residual_rating] IN { "High", "Critical" } )
+
+Risks Outside Appetite =
+CALCULATE ( [Risks Assessed], risk_scores[appetite_status] = "Outside appetite" )
+
+Avg Control Score = AVERAGE ( control_scores[control_score] )
+
+Controls Not Fully Effective =
+CALCULATE ( [Controls Mapped], control_scores[control_score] < 3 )
+
+Control Effectiveness % =
+DIVIDE ( CALCULATE ( [Controls Mapped], control_scores[control_score] = 3 ), [Controls Mapped] )
+
+// Heat map: put risk_scores[impact] on rows, risk_scores[likelihood] (or residual_likelihood) on columns,
+// this measure in values, and use "Heat Map Colour" as the conditional-format field value.
+Heat Map Count = COALESCE ( [Risks Assessed], 0 )
+
+Heat Map Colour =
+VAR _score = SELECTEDVALUE ( risk_scores[impact] ) * SELECTEDVALUE ( risk_scores[likelihood] )
+RETURN
+    SWITCH (
+        TRUE (),
+        _score >= 20, "#D03B3B",   // Critical
+        _score >= 12, "#EC835A",   // High
+        _score >= 6,  "#FAB219",   // Medium
+        "#0CA30C"                  // Low
+    )
+
+// ---------- KRI ----------
+Latest Month = CALCULATE ( MAX ( kri_rag[month] ), ALL ( kri_rag ) )
+
+KRI Value = SUM ( kri_rag[value] )
+
+KRI Latest Value =
+CALCULATE ( [KRI Value], kri_rag[month] = [Latest Month] )
+
+KRI RAG =
+VAR _v = [KRI Value]
+VAR _g = MAX ( kri_rag[green_max] )
+VAR _a = MAX ( kri_rag[amber_max] )
+RETURN
+    IF ( ISBLANK ( _v ), BLANK (), IF ( _v <= _g, "Green", IF ( _v <= _a, "Amber", "Red" ) ) )
+
+KRI RAG Colour =
+SWITCH ( [KRI RAG], "Green", "#0CA30C", "Amber", "#FAB219", "Red", "#D03B3B", "#FFFFFF" )
+
+KRI Breaches = SUM ( kri_rag[is_breach] )
+
+KRIs Red Latest =
+CALCULATE ( DISTINCTCOUNT ( kri_rag[kri_id] ), kri_rag[rag] = "Red", kri_rag[month] = [Latest Month] )
+
+KRIs Amber Latest =
+CALCULATE ( DISTINCTCOUNT ( kri_rag[kri_id] ), kri_rag[rag] = "Amber", kri_rag[month] = [Latest Month] )
+
+// Breach alert: KRI is Red this month, or Amber for 3 consecutive months
+KRI Breach Alert =
+VAR _latest = [Latest Month]
+VAR _last3 =
+    CALCULATETABLE ( VALUES ( kri_rag[month] ), TOPN ( 3, ALL ( kri_rag[month] ), kri_rag[month], DESC ) )
+VAR _redNow = CALCULATE ( COUNTROWS ( kri_rag ), kri_rag[month] = _latest, kri_rag[rag] = "Red" )
+VAR _amber3 = CALCULATE ( COUNTROWS ( kri_rag ), kri_rag[month] IN _last3, kri_rag[rag] <> "Green" )
+RETURN
+    IF ( _redNow > 0, "BREACH - Red", IF ( _amber3 >= 3, "WATCH - Amber 3 months", "OK" ) )
+
+KRI MoM Change =
+VAR _cur = [KRI Value]
+VAR _prev = CALCULATE ( [KRI Value], PREVIOUSMONTH ( DimMonth[date] ) )
+RETURN IF ( NOT ISBLANK ( _prev ), _cur - _prev )
+
+// ---------- Issues ----------
+Open Issues = CALCULATE ( COUNTROWS ( issue_ageing ), issue_ageing[status] = "Open" )
+
+Overdue Issues = CALCULATE ( COUNTROWS ( issue_ageing ), issue_ageing[due_status] = "Overdue" )
+
+Overdue % = DIVIDE ( [Overdue Issues], [Open Issues] )
+
+Avg Open Issue Age (days) =
+CALCULATE ( AVERAGE ( issue_ageing[age_days] ), issue_ageing[status] = "Open" )
+
+Open Issues 90+ Days =
+CALCULATE ( [Open Issues], issue_ageing[ageing_bucket] = "90+ days" )
+
+// ---------- Calculated tables ----------
+DimMonth =
+ADDCOLUMNS (
+    DISTINCT ( kri_rag[month] ),
+    "date", DATEVALUE ( kri_rag[month] & "-01" ),
+    "Month Label", FORMAT ( DATEVALUE ( kri_rag[month] & "-01" ), "MMM YY" )
+)
+
+DimRAG = DATATABLE ( "rag", STRING, "sort", INTEGER, { { "Green", 1 }, { "Amber", 2 }, { "Red", 3 } } )

@@ -1,0 +1,26 @@
+control_id,name,control_type,nature,frequency,owner,design_rating,operating_rating
+C01,OVD checklist verification by maker,Preventive,Manual,Per application,Onboarding Ops,Effective,Partially Effective
+C02,OCR and image-tamper detection on uploads,Preventive,Automated,Per application,Fraud Analytics,Effective,Effective
+C03,Aadhaar e-KYC / DigiLocker validation,Preventive,Automated,Per application,Onboarding Ops,Effective,Effective
+C04,Video KYC (V-CIP) with liveness check,Preventive,IT-dependent manual,Per application,Onboarding Ops,Effective,Partially Effective
+C05,Real-time sanctions screening (UN/OFAC/MHA lists),Preventive,Automated,Per application,Financial Crime Ops,Effective,Effective
+C06,PEP screening at onboarding,Preventive,Automated,Per application,Financial Crime Ops,Effective,Partially Effective
+C07,Adverse media screening,Detective,Automated,Per application,Financial Crime Ops,Partially Effective,Partially Effective
+C08,Customer risk rating model auto-assignment,Preventive,Automated,Per application,KYC Policy,Effective,Effective
+C09,EDD checklist with senior management sign-off,Preventive,Manual,Per high-risk application,KYC Policy,Effective,Partially Effective
+C10,Address verification (utility bill / field visit),Preventive,Manual,Per application,Onboarding Ops,Partially Effective,Partially Effective
+C11,"De-duplication on PAN, mobile and email",Preventive,Automated,Per application,Data Governance,Effective,Partially Effective
+C12,Maker-checker on data entry,Preventive,Manual,Per application,Onboarding Ops,Effective,Effective
+C13,Daily QC sampling of onboarded files,Detective,Manual,Daily,Onboarding QA,Effective,Partially Effective
+C14,Role-based access and masking on KYC repository,Preventive,Automated,Continuous,Information Security,Effective,Effective
+C15,DLP monitoring on KYC data,Detective,Automated,Continuous,Information Security,Partially Effective,Ineffective
+C16,Mandatory time-stamped e-consent capture,Preventive,Automated,Per application,Digital Channels,Effective,Partially Effective
+C17,Bureau pull and income verification before limit,Preventive,Automated,Per application,Credit Policy,Effective,Effective
+C18,Override authority matrix with dual sign-off,Preventive,Manual,Per override,Credit Policy,Effective,Effective
+C19,Monthly override review by Compliance,Detective,Manual,Monthly,Compliance,Effective,Partially Effective
+C20,Onboarding SLA dashboard and queue monitoring,Detective,IT-dependent manual,Daily,Onboarding Ops,Partially Effective,Partially Effective
+C21,DSA due diligence and certification,Preventive,Manual,Annual,Vendor Management,Effective,Partially Effective
+C22,DSA sourcing quality review (mystery shopping),Detective,Manual,Quarterly,Vendor Management,Partially Effective,Ineffective
+C23,V-CIP recording retention and audit trail,Preventive,Automated,Per application,IT Operations,Effective,Partially Effective
+C24,Sanctions alert clearance within 24h (4-eyes),Detective,Manual,Daily,Financial Crime Ops,Effective,Partially Effective
+C25,Early-life fraud monitoring (first 90 days),Detective,Automated,Daily,Fraud Analytics,Effective,Effective

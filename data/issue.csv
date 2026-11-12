@@ -1,0 +1,23 @@
+issue_id,title,source,risk_id,control_id,kri_id,severity,owner,raised_date,due_date,closed_date,status
+ISS-001,KRI breach (Red): Applications processed without consent record,KRI breach,R13,,K12,High,Compliance Manager,2026-04-05,2026-05-20,,Open
+ISS-002,DLP monitoring on KYC data: design weakness identified in RCSA,RCSA control weakness,R12,C15,,High,Information Security,2026-04-16,2026-06-15,2026-06-02,Closed
+ISS-003,Sanctions alert clearance within 24h (4-eyes): operating weakness identified in RCSA,RCSA control weakness,R05,C24,,Medium,Financial Crime Ops,2026-04-18,2026-07-17,,Open
+ISS-004,Onboarding SLA dashboard and queue monitoring: design weakness identified in RCSA,RCSA control weakness,R16,C20,,Medium,Onboarding Ops,2026-04-26,2026-07-25,,Open
+ISS-005,"De-duplication on PAN, mobile and email: operating weakness identified in RCSA",RCSA control weakness,R10,C11,,Medium,Data Governance,2026-05-10,2026-08-08,,Open
+ISS-006,DSA due diligence and certification: operating weakness identified in RCSA,RCSA control weakness,R17,C21,,Medium,Vendor Management,2026-05-19,2026-08-17,,Open
+ISS-007,Monthly override review by Compliance: operating weakness identified in RCSA,RCSA control weakness,R15,C19,,Medium,Compliance,2026-05-25,2026-08-23,,Open
+ISS-008,KRI breach (Red): High-risk customers onboarded without EDD sign-off,KRI breach,R08,,K05,High,KYC Policy Lead,2026-06-05,2026-07-20,,Open
+ISS-009,PEP screening at onboarding: operating weakness identified in RCSA,RCSA control weakness,R04,C06,,Medium,Financial Crime Ops,2026-06-08,2026-09-06,2026-06-30,Closed
+ISS-010,KRI breach (Red): Sanctions alerts not cleared within 24 hours,KRI breach,R05,,K03,High,MLRO,2026-07-05,2026-08-19,,Open
+ISS-011,EDD checklist with senior management sign-off: operating weakness identified in RCSA,RCSA control weakness,R08,C09,,Medium,KYC Policy,2026-07-10,2026-10-08,,Open
+ISS-012,Adverse media screening: design weakness identified in RCSA,RCSA control weakness,R06,C07,,Medium,Financial Crime Ops,2026-08-06,2026-11-04,2026-10-26,Closed
+ISS-013,Daily QC sampling of onboarded files: operating weakness identified in RCSA,RCSA control weakness,R02,C13,,Medium,Onboarding QA,2026-08-12,2026-11-10,,Open
+ISS-014,Mandatory time-stamped e-consent capture: operating weakness identified in RCSA,RCSA control weakness,R13,C16,,Medium,Digital Channels,2026-08-16,2026-11-14,,Open
+ISS-015,V-CIP recording retention and audit trail: operating weakness identified in RCSA,RCSA control weakness,R18,C23,,Medium,IT Operations,2026-09-13,2026-12-12,,Open
+ISS-016,DSA sourcing quality review (mystery shopping): design weakness identified in RCSA,RCSA control weakness,R17,C22,,High,Vendor Management,2026-09-26,2026-11-25,,Open
+ISS-017,OVD checklist verification by maker: operating weakness identified in RCSA,RCSA control weakness,R02,C01,,Medium,Onboarding Ops,2026-09-26,2026-12-25,,Open
+ISS-018,Video KYC (V-CIP) with liveness check: operating weakness identified in RCSA,RCSA control weakness,R01,C04,,Medium,Onboarding Ops,2026-09-27,2026-12-26,,Open
+ISS-019,Address verification (utility bill / field visit): design weakness identified in RCSA,RCSA control weakness,R09,C10,,Medium,Onboarding Ops,2026-09-27,2026-12-26,,Open
+ISS-020,KRI breach (Red): Applications breaching 48-hour onboarding SLA,KRI breach,R16,,K09,High,Head of Onboarding Ops,2026-10-05,2026-11-19,,Open
+ISS-021,"KRI breach (Red): Early-life fraud cases per 10,000 new cards",KRI breach,R01,,K10,High,Fraud Risk Manager,2026-10-05,2026-11-19,,Open
+ISS-022,KRI breach (Red): V-CIP sessions failing QA or missing recording,KRI breach,R18,,K11,High,Compliance Manager,2026-10-31,2026-12-15,,Open
